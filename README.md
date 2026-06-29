@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Butcher's Log — BBQ Smoke & Temperature Companion
 
-## Getting Started
+Turn a "dumb" dual-probe smoke receiver (e.g. ThermoWorks Smoke) into a logged,
+plotted cook history. Create a cook, assign each probe a role (grate vs. meat),
+then snap a photo of the receiver throughout the cook — Claude reads the two
+temperatures off the photo and plots them on a hand-drawn ledger graph. Log
+events (spritz, wrap, photo) as pins, and review a per-cook summary afterward.
 
-First, run the development server:
+Vintage parchment butcher-shop theme. Mobile-first.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Stack
+
+- **Next.js 14** (App Router, TypeScript)
+- **Neon** (PostgreSQL) via Drizzle ORM
+- **Vercel Blob** for receiver photos
+- **Anthropic Claude** (`claude-sonnet-4-6`) vision for reading temps
+- **Tailwind CSS** + custom design tokens
+- Fonts: Ultra, Spectral, Space Mono
+
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...        # Claude vision
+DATABASE_URL=postgresql://...        # Neon pooled connection string
+BLOB_READ_WRITE_TOKEN=vercel_...     # Vercel Blob store token
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run db:push      # create the tables in Neon (needs DATABASE_URL)
+npm run dev          # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy to Vercel
 
-## Learn More
+1. **Create the project**: Vercel → Add New → Project → import this repo.
+2. **Add Blob storage**: in the project, Storage → Create → Blob. Vercel wires
+   `BLOB_READ_WRITE_TOKEN` in automatically.
+3. **Add a Neon database**: either via Vercel's Neon integration (Storage →
+   Create → Neon) or paste your own `DATABASE_URL` under Settings →
+   Environment Variables.
+4. **Add `ANTHROPIC_API_KEY`** under Settings → Environment Variables.
+5. **Create the tables**: run `npm run db:push` locally against the production
+   `DATABASE_URL` (or as a deploy step).
+6. Deploy.
 
-To learn more about Next.js, take a look at the following resources:
+## Data model
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **sessions** — name, cut type, probe roles, start/end, done-target temp, notes
+- **readings** — timestamp, grate temp, meat temp, source (photo/manual), photo URL
+- **events** — timestamp, type (spritz/wrap/photo/custom), note, photo URL
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How the photo read works
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`POST /api/sessions/[id]/readings` with a multipart image uploads the photo to
+Blob and sends it to Claude, which returns the two probe temperatures as JSON.
+The values are mapped to grate/meat using the session's probe roles, shown for
+confirmation/correction, then saved via a JSON `POST` to the same route.

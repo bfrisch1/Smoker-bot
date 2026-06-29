@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --parchment: #ecdfc0;
+  --card: #f5ebd2;
+  --graph-bg: #fcf6e6;
+  --butcher-red: #a8321f;
+  --red-pressed: #6e1d12;
+  --red-ink: #7c2316;
+  --ink: #2b1d10;
+  --ink-brown: #3a2817;
+  --brass: #b8893c;
+  --smoke-teal: #3f6f7a;
+  --cream: #f2e7cc;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--parchment);
+  background-image: radial-gradient(
+      120% 80% at 80% -10%,
+      rgba(124, 35, 22, 0.05),
+      transparent 60%
+    ),
+    radial-gradient(80% 60% at 10% 110%, rgba(58, 40, 23, 0.06), transparent 60%);
+  color: var(--ink);
+  font-family: var(--font-spectral), Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Paper grain overlay — subtle fractal noise multiply. Apply `grain` to a
+   position:relative container; the texture renders behind content via ::after. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.32 0 0 0 0 0.22 0 0 0 0 0.1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+/* Hide scrollbars on phone-style scroll areas */
+.scr::-webkit-scrollbar {
+  display: none;
+}
+.scr {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Section label: "▸ NOW SMOKING" */
+.section-label {
+  font-family: var(--font-space-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--red-ink);
+  text-transform: uppercase;
+}
+
+/* Pulsing live dot for active cooks */
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(168, 50, 31, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(168, 50, 31, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(168, 50, 31, 0);
+  }
+}
+.live-dot {
+  animation: live-pulse 1.8s infinite;
+}
+
+/* Stamped primary button */
+.btn-stamp {
+  font-family: var(--font-space-mono), monospace;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--cream);
+  background: var(--butcher-red);
+  border: none;
+  border-radius: 3px;
+  box-shadow: 0 2px 0 var(--red-pressed);
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+.btn-stamp:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--red-pressed);
+}
+.btn-stamp:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
